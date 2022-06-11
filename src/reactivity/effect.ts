@@ -28,6 +28,8 @@ class ReactiveEffect {
 }
 
 function cleanupEffect(effect) {
+    // dep 类型为 Set   
+    // Set数据类型 调用 delete 删除 传进stop的effect 自身 而不是全清空deps
     effect.deps.forEach((dep:any) => {
         dep.delete(effect);
     });
@@ -53,6 +55,7 @@ export function track(target, key){
 
     if(!activeEffect) return;
     dep.add(activeEffect);
+    // activeEffect 反向收集deps
     activeEffect.deps.push(dep);
 } 
 
