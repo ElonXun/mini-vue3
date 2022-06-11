@@ -1,5 +1,8 @@
 import { extend} from '../shared';
 
+let activeEffect;
+let shouldTrack;
+
 class ReactiveEffect {
     private _fn: any;
     public scheduler;
@@ -12,8 +15,18 @@ class ReactiveEffect {
     }
 
     run(){
+        if (!this.active) {
+            return this._fn();
+        }
+
+        // 应该收集依赖的标志
+        shouldTrack = true;
         activeEffect = this;
-        return this._fn();
+
+        const result = this._fn();
+        // 重置  shouldTrack
+        shouldTrack = false;
+        return result;
     }
 
     stop(){
@@ -33,10 +46,12 @@ function cleanupEffect(effect) {
     effect.deps.forEach((dep:any) => {
         dep.delete(effect);
     });
+    effect.deps.length = 0;
 }
 
 const targetsMap = new Map();
 export function track(target, key){
+    if (!isTracking()) return;
     // new Map    
     // target -> key(每个对象中 key 对应的 依赖数组deps)
     //           new Map
@@ -52,12 +67,18 @@ export function track(target, key){
         dep  = new Set();
         depsMap.set(key, dep);
     }
-
-    if(!activeEffect) return;
+    // 如果dep已经有activeEffect了 就无需在add （Set类型 本身是会自动忽略重复元素的）
+    if (dep.has(activeEffect)) return;
     dep.add(activeEffect);
     // activeEffect 反向收集deps
     activeEffect.deps.push(dep);
 } 
+
+// 判断是否收集依赖中
+function isTracking(){
+    return shouldTrack && (activeEffect !== undefined);
+}
+
 
 export function trigger(target, key){
     let depsMap = targetsMap.get(target);
@@ -71,7 +92,6 @@ export function trigger(target, key){
     }
 }
 
-let activeEffect;
 export function effect(fn, options:any = {}){
 
     const scheduler = options.scheduler;
