@@ -1,5 +1,6 @@
 import { track, trigger } from './effect';
-import { ReactiveFlags } from './reactive';
+import { reactive, ReactiveFlags, readonly } from './reactive';
+import { isObject } from '../shared';
 
 const get = createGetter();
 const set = createSetter();
@@ -17,7 +18,11 @@ function createGetter(isReadyonly = false) {
             return isReadyonly;
         }
         const res = Reflect.get(target, key);
-        
+        // 如果res 为Object则继续调用 reactive 或 readonly
+        if (isObject(res)) {
+            return isReadyonly? readonly(res) :reactive(res);
+        }
+
         // readonly 因没有set功能 所以也不需要进行依赖收集 
         if (!isReadyonly) {
             // 依赖收集
