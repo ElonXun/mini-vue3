@@ -1,5 +1,5 @@
 
-import { mutableHandles, readonlyHandles } from './baseHandlers';
+import { mutableHandles, readonlyHandles, shallowReadonlyHandles } from './baseHandlers';
 
 
 export const enum ReactiveFlags {
@@ -17,6 +17,10 @@ export function reactive (raw){
 
 export function readonly (raw){
     return createActiveObject(raw, readonlyHandles);
+}
+
+export function shallowReadonly(raw){
+    return createActiveObject(raw, shallowReadonlyHandles);
 }
 
 export function isReactive(value) {
