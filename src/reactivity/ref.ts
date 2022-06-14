@@ -8,6 +8,7 @@ class RefImpl {
     private _value: any;
     public dep;
     private _rawValue: any;
+    public __vue_isRef = true;
     constructor(value){
         this._rawValue = value;
         // 如果value是Object类型  先要把value值用reactive进行转化    
@@ -46,4 +47,13 @@ function trackRefValue(ref){
 
 export function ref (value) {
     return new RefImpl(value);
+}
+
+export function isRef(ref) {
+    return !!ref.__vue_isRef;
+}
+
+export function unRef(ref) {
+    // 首先判断是否是 Ref对象 是则返回ref.value 否则直接返回值
+    return isRef(ref)? ref.value: ref;
 }
